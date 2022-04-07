@@ -43,7 +43,7 @@ public class App {
     public static int chainId = 8801;
 
     // 钱包文件保持路径，请替换位自己的某文件夹路径
-    public static String walletFilePath = "/home/yzq/work/xfile-pdc-java/pdcdemo/wallet";
+    public static String walletFilePath = "./wallet";
 
     // 钱包文件名
     public static String walletFileName = "wallet.json";
@@ -74,7 +74,7 @@ public class App {
         chain_info();
         contractAddress(contractAddress);
         showAccountTokens(walletAddress);
-        mint_token();
+        //mint_token();
         showTokens();
         //transto();
     }
@@ -205,6 +205,10 @@ public class App {
             RemoteFunctionCall<String> res_sender = contract.senderOfToken(tokenId);
             String sender = res_sender.send();
             log.info("\tsender: {}", sender);
+
+            RemoteFunctionCall<String> res_datas = contract.datasOfToken(tokenId);
+            String datas = res_datas.send();
+            log.info("\tdatas: {}", datas);
         }
     }
     // 获取账户tokenId()
