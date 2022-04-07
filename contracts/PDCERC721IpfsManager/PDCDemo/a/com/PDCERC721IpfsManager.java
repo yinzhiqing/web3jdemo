@@ -1,4 +1,4 @@
-package com.pdc.sol;
+package a.com;
 
 import io.reactivex.Flowable;
 import io.reactivex.functions.Function;

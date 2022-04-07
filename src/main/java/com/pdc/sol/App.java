@@ -53,7 +53,8 @@ public class App {
 
     //kovan 0xD8d2cF6996415dCbA49b270420d8AA195d0dA7C7
     //violin 0xD996c4BD6bd52f1255B50255D184Bb1c1360C982
-    public static String contractAddress = "0xD996c4BD6bd52f1255B50255D184Bb1c1360C982";
+    //0x76A232FDce2ddb24d41CA5Ba8E3C285bDe8793E5
+    public static String contractAddress = "0x76A232FDce2ddb24d41CA5Ba8E3C285bDe8793E5";
     public static String mnemonic = "type prison nut basket borrow empower unhappy south local desh salad peace";
     public static String rpc = "http://47.243.254.231/rpc";
 
@@ -73,8 +74,8 @@ public class App {
         chain_info();
         contractAddress(contractAddress);
         showAccountTokens(walletAddress);
-        setCid();
-        //getCidByTokenId();
+        mint_token();
+        showTokens();
         //transto();
     }
 
@@ -88,10 +89,8 @@ public class App {
         if (chain.equals("kovan")) {
             contractAddress = "0xD8d2cF6996415dCbA49b270420d8AA195d0dA7C7";
             rpc = "https://kovan.infura.io/v3/e1ac6790237a4044bff3b676bae7e257";
-        } else {
-            contractAddress = "0xD996c4BD6bd52f1255B50255D184Bb1c1360C982";
-            rpc = "http://47.243.254.231/rpc";
-        }
+        } 
+       
         log.info("rpc: {}", rpc);
         log.info("contract address: {}", contractAddress);
     }
@@ -140,9 +139,10 @@ public class App {
         String address = credentials.getAddress();
         BigInteger publicKey = credentials.getEcKeyPair().getPublicKey();
         BigInteger privateKey = credentials.getEcKeyPair().getPrivateKey();
-        log.info("address=" + address);
-        log.info("public key=" + publicKey);
-        log.info("private key=" + privateKey);
+        log.info("wallet info:");
+        log.info("\taddress=" + address);
+        log.info("\tpublic key=" + publicKey);
+        log.info("\tprivate key=" + privateKey);
     }
     // 加载钱包文件
     // 加载合约
@@ -160,12 +160,11 @@ public class App {
         log.info("contract name: {}", contractName.send());
     }
 
-    public static void setCid() throws Exception {
+    public static void mint_token() throws Exception {
         String cid = "QmWuamsTMwPnonuLh4MBxASymDB6YRiwq4Cic35rcxiFuQ";
+        String to = "0xc9702898f44bD124712184DAeffbd2bf012e069B";
         log.info("signer address: {}", credentials.getAddress());
-
-        RemoteFunctionCall<TransactionReceipt> result = contract.response(BigInteger.valueOf(9), cid);
-
+        RemoteFunctionCall<TransactionReceipt> result = contract.mint(to, cid);
         log.info("block hash: " + result.send().getBlockHash());
     }
 
@@ -180,6 +179,34 @@ public class App {
         }
     }
 
+    // 获取all token
+    public static void showTokens() throws Exception {
+        RemoteFunctionCall<BigInteger> response = contract.totalSupply();
+        BigInteger result = response.send();
+        log.info("totalSupply: {}", result);
+        Integer c = Integer.valueOf(result.toString());
+        for(Integer i = 0; i < c; i++) {
+            RemoteFunctionCall<BigInteger> res_tid = contract.tokenByIndex(BigInteger.valueOf(i));
+            BigInteger tokenId = res_tid.send();
+            log.info("tokenId[{}:{}]: ", i, tokenId);
+
+            RemoteFunctionCall<String> res_owner = contract.ownerOf(tokenId);
+            String owner = res_owner.send();
+            log.info("\towner: {}", owner);
+
+            RemoteFunctionCall<BigInteger> res_timestamp = contract.timestampOfToken(tokenId);
+            BigInteger timestamp = res_timestamp.send();
+            log.info("\timestamp: {}", timestamp);
+
+            RemoteFunctionCall<String> res_singer = contract.singerOfToken(tokenId);
+            String singer = res_singer.send();
+            log.info("\tsinger: {}", singer);
+
+            RemoteFunctionCall<String> res_sender = contract.senderOfToken(tokenId);
+            String sender = res_sender.send();
+            log.info("\tsender: {}", sender);
+        }
+    }
     // 获取账户tokenId()
     public static BigInteger getTokenByIndex(String owner, Integer index) throws Exception {
         return getTokenByIndex(owner, BigInteger.valueOf(index));
@@ -214,22 +241,10 @@ public class App {
     public static void transto() throws Exception {
        String address_to = "0x89fF4a850e39A132614dbE517F80603b4A96fa0A"; 
 
-
-
-
        TransactionManager tm = new RawTransactionManager(web3j, credentials, 8801);//chainId=8801
        Transfer t = new Transfer(web3j, tm);
        TransactionReceipt send = t.sendFunds(address_to,
                 BigDecimal.ONE, Convert.Unit.FINNEY, BigInteger.valueOf(20000000000L), BigInteger.valueOf(2100000)).send();
-
-
-
-
-
-       /*
-        TransactionReceipt send = Transfer.sendFunds(web3j, credentials, address_to,
-                BigDecimal.ONE, Convert.Unit.FINNEY).send();
-                */
 
         log.info("Transaction complete:");
         log.info("trans hash=" + send.getTransactionHash());
