@@ -24,6 +24,7 @@ import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
 import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
+import java.util.List;
 
 
 
@@ -55,8 +56,9 @@ public class App {
     //violin 0xD996c4BD6bd52f1255B50255D184Bb1c1360C982
     //0x76A232FDce2ddb24d41CA5Ba8E3C285bDe8793E5
     public static String contractAddress = "0x76A232FDce2ddb24d41CA5Ba8E3C285bDe8793E5";
-    public static String mnemonic = "type prison nut basket borrow empower unhappy south local desh salad peace";
-    public static String rpc = "http://47.243.254.231/rpc";
+    public static String mnemonic = "";
+    //public static String rpc = "http://47.243.254.231/rpc";
+    public static String rpc = "http://124.251.110.238/rpc";
 
     public static Credentials credentials;
 
@@ -74,7 +76,7 @@ public class App {
         chain_info();
         contractAddress(contractAddress);
         showAccountTokens(walletAddress);
-        //mint_token();
+        mint_token();
         showTokens();
         //transto();
     }
@@ -154,7 +156,11 @@ public class App {
         //修改 contract = PDCERC721IpfsManager.load(contractAddress, web3j, credentials, contractGasProvider);
         //为->
         TransactionManager tm = new RawTransactionManager(web3j, credentials, 8801);
-        contract = new PDCERC721IpfsManager(contractAddress, web3j, tm, BigInteger.valueOf(2000000000L), BigInteger.valueOf(2100000));
+        contract = new PDCERC721IpfsManager(contractAddress, 
+                web3j, 
+                tm, 
+                BigInteger.valueOf(2000000000L), 
+                BigInteger.valueOf(2100000));
 
         RemoteFunctionCall<String> contractName = contract.name();
         log.info("contract name: {}", contractName.send());
@@ -165,7 +171,17 @@ public class App {
         String to = "0xc9702898f44bD124712184DAeffbd2bf012e069B";
         log.info("signer address: {}", credentials.getAddress());
         RemoteFunctionCall<TransactionReceipt> result = contract.mint(to, cid);
-        log.info("block hash: " + result.send().getBlockHash());
+        //发送交易
+        TransactionReceipt tr = result.send();
+        //获取mint时合约事件
+        List<PDCERC721IpfsManager.RequestTransferEventResponse> rter = contract.getRequestTransferEvents(tr);
+        log.info("block hash: " + tr.getTransactionHash());
+        //显示事件内容
+        log.info("size: " + rter.size());
+        log.info("from: " + rter.get(0).from);
+        log.info("to:   " + rter.get(0).to);
+        log.info("tokenId: " + rter.get(0).tokenId); //tokenId
+        log.info("cid: " + rter.get(0).datas);
     }
 
     // 获取账户tokenId()
